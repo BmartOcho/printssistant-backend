@@ -1,10 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/app/lib/supabase-server'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-
-    // Validate required fields
     const {
       customerName,
       customerEmail,
@@ -16,47 +15,50 @@ export async function POST(request: NextRequest) {
       colorMode,
       urgency,
       fileUrls,
-    } = body
+    } = body ?? {}
 
     if (!customerEmail || !jobTitle) {
-      return NextResponse.json({ error: "Missing required fields: customerEmail, jobTitle" }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Missing required fields: customerEmail, jobTitle' },
+        { status: 400 }
+      )
     }
 
-    // Process the form job data
     const jobData = {
-      source: "web_form",
-      customerName: customerName || "",
-      customerEmail,
-      customerPhone: customerPhone || "",
-      jobTitle,
-      description: description || "",
-      quantity: quantity || 1,
-      paperSize: paperSize || "A4",
-      colorMode: colorMode || "color",
-      urgency: urgency || "normal",
-      fileUrls: fileUrls || [],
-      status: "pending",
-      createdAt: new Date().toISOString(),
+      source: 'web_form',
+      customer_name: customerName ?? '',
+      customer_email: customerEmail,
+      customer_phone: customerPhone ?? '',
+      job_title: jobTitle,
+      description: description ?? '',
+      quantity: quantity ?? 1,
+      paper_size: paperSize ?? 'A4',
+      color_mode: colorMode ?? 'color',
+      urgency: urgency ?? 'normal',
+      file_urls: fileUrls ?? [],
+      status: 'pending',
+      created_at: new Date().toISOString(),
     }
 
-    // TODO: Store in Supabase
-    // const supabase = createServerClient(...)
-    // const { data, error } = await supabase
-    //   .from('print_jobs')
-    //   .insert(jobData)
-    //   .select()
-    //   .single()
+    const { data, error } = await supabaseAdmin
+      .from('print_jobs')
+      .insert(jobData)
+      .select()
+      .single()
 
-    console.log("[v0] Form job received:", jobData)
+    if (error) {
+      console.error('[Supabase] insert(form) failed:', error)
+      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Job received from web form",
-      jobId: `form-${Date.now()}`, // Replace with actual DB ID
-      data: jobData,
+      message: 'Job received from web form',
+      jobId: data.id,
+      data,
     })
   } catch (error) {
-    console.error("[v0] Error processing form job:", error)
-    return NextResponse.json({ error: "Failed to process form job" }, { status: 500 })
+    console.error('[form-job] Error:', error)
+    return NextResponse.json({ error: 'Failed to process form job' }, { status: 500 })
   }
 }
