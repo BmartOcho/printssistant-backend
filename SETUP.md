@@ -1,5 +1,11 @@
 # Printssistant Backend Setup Guide
 
+## ✅ Project Status
+
+**Your Supabase database is already connected and working!**
+
+All API endpoints are now storing job data directly in your Supabase `print_jobs` table with Row Level Security (RLS) enabled.
+
 ## Project Overview
 This Next.js backend handles print job submissions from multiple sources:
 - Email (via email parsing service)
@@ -61,26 +67,41 @@ This Next.js backend handles print job submissions from multiple sources:
 }
 \`\`\`
 
-## Supabase Setup
+## ✅ Supabase - Already Connected!
 
-### Step 1: Connect Supabase Integration
-1. In v0, open the in-chat sidebar
-2. Click on "Connect" section
-3. Add Supabase integration
-4. Follow the prompts to connect your Supabase project
+Your Supabase Pro database is configured and ready. The integration includes:
 
-### Step 2: Run Database Migration
-1. The SQL script in \`scripts/create-print-jobs-table.sql\` will create the necessary table
-2. v0 can run this script directly for you
-3. Or you can run it manually in your Supabase SQL editor
+- **Database Connection**: Active and working
+- **Table**: `print_jobs` table created with proper schema
+- **RLS Policies**: 
+  - Authenticated users can read all jobs
+  - Authenticated users can update jobs
+  - Service role can insert new jobs (used by API routes)
+- **Environment Variables**: Automatically configured by v0
 
-### Step 3: Update API Routes
-Once Supabase is connected, uncomment the database code in:
-- \`app/api/jobs/email/route.ts\`
-- \`app/api/jobs/form/route.ts\`
-- \`app/api/webhooks/canva/route.ts\`
+### Database Schema
 
-Replace the TODO sections with actual Supabase calls using the \`createServerClient\` function.
+The `print_jobs` table includes:
+\`\`\`sql
+- id (uuid, primary key)
+- source (text) - "email", "web_form", or "canva"
+- customer_name, customer_email, customer_phone (text)
+- job_title, subject, description (text)
+- quantity (integer)
+- paper_size, color_mode, urgency (text)
+- file_urls, attachments (jsonb)
+- export_url, design_id, design_title (text)
+- canva_user_id (text)
+- status (text) - "pending", "processing", "completed", "cancelled"
+- received_at, created_at, updated_at (timestamp)
+\`\`\`
+
+### View Your Data
+To see jobs in your database:
+1. Open the v0 sidebar
+2. Click "Connect" section
+3. Click on your Supabase integration
+4. Access your Supabase dashboard to view the `print_jobs` table
 
 ## Canva Webhook Setup
 
@@ -90,42 +111,32 @@ Replace the TODO sections with actual Supabase calls using the \`createServerCli
 3. Navigate to "Webhooks" section
 
 ### Step 2: Configure Webhook
-1. Add webhook URL: \`https://your-domain.vercel.app/api/webhooks/canva\`
-2. Subscribe to events:
-   - \`design.export.completed\`
-   - \`design.published\` (optional)
-3. Save your webhook secret for signature verification
+1. Add webhook URL: `https://your-domain.vercel.app/api/webhooks/canva`
+   - Replace `your-domain` with your actual Vercel domain after deployment
+2. Subscribe to event: `design.export.completed`
+3. Copy the webhook signing secret from Canva
 
-### Step 3: Verify Webhook (Recommended for Production)
-Uncomment the signature verification code in \`app/api/webhooks/canva/route.ts\`:
+### Step 3: Add Webhook Secret
+Add the Canva webhook secret as an environment variable:
 
-\`\`\`typescript
-const signature = request.headers.get('x-canva-signature')
-if (!verifyCanvaSignature(signature, body)) {
-  return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-}
-\`\`\`
+1. In v0, open the in-chat sidebar
+2. Click "Vars" section
+3. Add new environment variable:
+   - Key: `CANVA_WEBHOOK_SECRET`
+   - Value: (paste your webhook secret from Canva)
 
-Add signature verification function:
-\`\`\`typescript
-function verifyCanvaSignature(signature: string | null, body: any): boolean {
-  if (!signature) return false
-  const secret = process.env.CANVA_WEBHOOK_SECRET!
-  // Implement HMAC verification based on Canva's documentation
-  return true // Replace with actual verification
-}
-\`\`\`
-
-### Step 4: Add Environment Variable
-Add \`CANVA_WEBHOOK_SECRET\` to your Vercel project environment variables.
+### Step 4: Test Canva Integration
+1. Export a design from Canva
+2. Check your Supabase `print_jobs` table for the new entry
+3. Verify it includes `design_id`, `export_url`, and `design_title`
 
 ## Email Integration Setup
 
-To receive emails and forward them to the \`/api/jobs/email\` endpoint, you can use:
+To receive emails and forward them to the `/api/jobs/email` endpoint:
 
 ### Option 1: SendGrid Inbound Parse
 1. Configure SendGrid Inbound Parse webhook
-2. Point it to: \`https://your-domain.vercel.app/api/jobs/email\`
+2. Point it to: `https://your-domain.vercel.app/api/jobs/email`
 3. Parse email data and forward as JSON
 
 ### Option 2: Mailgun Routes
@@ -141,10 +152,12 @@ Create a middleware service that:
 
 ## Testing
 
+All endpoints are live and storing data in Supabase!
+
 ### Test Email Endpoint
 \`\`\`bash
-curl -X POST https://your-domain.vercel.app/api/jobs/email \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-domain.vercel.app/api/jobs/email \
+  -H "Content-Type: application/json" \
   -d '{
     "from": "test@example.com",
     "subject": "Test Job",
@@ -154,8 +167,8 @@ curl -X POST https://your-domain.vercel.app/api/jobs/email \\
 
 ### Test Form Endpoint
 \`\`\`bash
-curl -X POST https://your-domain.vercel.app/api/jobs/form \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-domain.vercel.app/api/jobs/form \
+  -H "Content-Type: application/json" \
   -d '{
     "customerEmail": "test@example.com",
     "jobTitle": "Test Print Job",
@@ -165,8 +178,8 @@ curl -X POST https://your-domain.vercel.app/api/jobs/form \\
 
 ### Test Canva Webhook
 \`\`\`bash
-curl -X POST https://your-domain.vercel.app/api/webhooks/canva \\
-  -H "Content-Type: application/json" \\
+curl -X POST https://your-domain.vercel.app/api/webhooks/canva \
+  -H "Content-Type: application/json" \
   -d '{
     "event_type": "design.export.completed",
     "design_id": "TEST123",
@@ -175,29 +188,31 @@ curl -X POST https://your-domain.vercel.app/api/webhooks/canva \\
   }'
 \`\`\`
 
-## Environment Variables Required
+## Environment Variables
 
-\`\`\`
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-CANVA_WEBHOOK_SECRET=your-canva-webhook-secret
-\`\`\`
+### Already Configured (via Supabase integration):
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- All Postgres connection strings
+
+### You Need to Add:
+- `CANVA_WEBHOOK_SECRET` - Get this from Canva Developer Portal after creating your webhook
 
 ## Next Steps
 
-1. Connect Supabase integration via v0 sidebar
-2. Run the database migration script
-3. Update API routes to use Supabase
-4. Configure Canva webhook in Canva Developer Portal
-5. Set up email forwarding service
-6. Test all endpoints
-7. Deploy to Vercel
+1. ✅ ~~Connect Supabase~~ - Already done!
+2. ✅ ~~Create database table~~ - Already created!
+3. ✅ ~~Configure API routes~~ - Already working!
+4. **Deploy to Vercel** - Click "Publish" button in v0
+5. **Configure Canva webhook** - Follow steps above
+6. **Set up email forwarding** - Choose an email service
+7. **Test all endpoints** - Use the curl commands above
 
 ## Support
 
 For issues or questions:
-- Check v0 documentation
-- Review Supabase logs in dashboard
-- Test webhooks using Canva's webhook testing tool
-- Monitor API logs in Vercel dashboard
-\`\`\`
+- **Supabase issues**: Check the "Connect" section in v0 sidebar
+- **Environment variables**: Use the "Vars" section in v0 sidebar
+- **API errors**: Check the v0 console logs (look for `[v0]` prefix)
+- **Canva webhook**: Use Canva's webhook testing tool in Developer Portal

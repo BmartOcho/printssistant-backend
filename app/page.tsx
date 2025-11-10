@@ -24,6 +24,15 @@ export default function HomePage() {
           </div>
         </div>
 
+        <div className="mt-8">
+          <a
+            href="/admin/jobs"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            View All Jobs
+          </a>
+        </div>
+
         <p className="mt-8 text-sm text-muted-foreground">See SETUP.md for complete integration instructions</p>
       </div>
     </main>
