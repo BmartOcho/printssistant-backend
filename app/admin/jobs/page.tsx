@@ -1,12 +1,15 @@
-import { createServerClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
 export default async function JobsPage() {
-  const supabase = await createServerClient()
+  const supabase = createServiceClient()
 
-  // Fetch all jobs from the database
+  console.log("[v0] Fetching all jobs from database...")
+
   const { data: jobs, error } = await supabase.from("print_jobs").select("*").order("created_at", { ascending: false })
+
+  console.log("[v0] Jobs fetched:", jobs?.length || 0, "jobs found")
 
   if (error) {
     console.error("[v0] Error fetching jobs:", error)
