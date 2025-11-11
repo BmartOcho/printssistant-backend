@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     process.env.CANVA_SCOPES ??
     "design:content:read design:content:write asset:write asset:read webhook:manage"
   const CANVA_AUTH_BASE = process.env.CANVA_AUTH_BASE || "https://www.canva.com"
-  const CANVA_AUTH_PATH = process.env.CANVA_AUTH_PATH || "/api/rest/v1/oauth/authorize"
+  const CANVA_AUTH_PATH = process.env.CANVA_AUTH_PATH || "/rest/v1/oauth/authorize"
   const CANVA_REDIRECT_URI_LOCAL = process.env.CANVA_REDIRECT_URI || "http://127.0.0.1:3000/api/canva/auth"
   const CANVA_REDIRECT_URI_PROD =
     process.env.CANVA_REDIRECT_URI_PROD || "https://printssistant-backend.vercel.app/api/canva/auth"
