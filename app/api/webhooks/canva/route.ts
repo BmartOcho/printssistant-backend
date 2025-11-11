@@ -23,11 +23,14 @@ export async function POST(request: NextRequest) {
     if (event_type === "design.export.completed") {
       const supabase = createServiceClient()
 
+      const sanitized = (value: unknown) =>
+        typeof value === "string" ? value.replace(/[^a-zA-Z0-9._%+-]/g, "").slice(0, 64) : ""
+
       const fallbackEmail =
-        typeof user_id === "string" && user_id.length > 0
-          ? `${user_id}@canva`
-          : typeof design_id === "string" && design_id.length > 0
-            ? `${design_id}@canva`
+        sanitized(user_id)?.length > 0
+          ? `${sanitized(user_id)}@canva.local`
+          : sanitized(design_id)?.length > 0
+            ? `${sanitized(design_id)}@canva.local`
             : "canva@system.local"
 
       const jobData = {
