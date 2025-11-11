@@ -5,7 +5,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate required fields
+    // Validate required fields, add to push
     const { from, subject, body: emailBody, attachments, receivedAt } = body
 
     if (!from || !subject) {
