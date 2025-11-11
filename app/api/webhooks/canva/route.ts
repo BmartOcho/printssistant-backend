@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createServiceClient } from "@/lib/supabase/service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Handle different event types
     if (event_type === "design.export.completed") {
-      const supabase = await createClient()
+      const supabase = createServiceClient()
 
       const jobData = {
         source: "canva",
