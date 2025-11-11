@@ -23,8 +23,16 @@ export async function POST(request: NextRequest) {
     if (event_type === "design.export.completed") {
       const supabase = createServiceClient()
 
+      const fallbackEmail =
+        typeof user_id === "string" && user_id.length > 0
+          ? `${user_id}@canva`
+          : typeof design_id === "string" && design_id.length > 0
+            ? `${design_id}@canva`
+            : "canva@system.local"
+
       const jobData = {
         source: "canva",
+        customer_email: fallbackEmail,
         design_id: design_id,
         design_title: design_title || "Untitled Design",
         export_url: export_url,
