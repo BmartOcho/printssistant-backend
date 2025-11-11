@@ -17,16 +17,22 @@ export async function GET(request: NextRequest) {
   const CANVA_CLIENT_SECRET = process.env.CANVA_CLIENT_SECRET;
   const CANVA_API_BASE = process.env.CANVA_API_BASE || "https://api.canva.com";
   const REDIRECT_LOCAL =
-    process.env.CANVA_REDIRECT_URI || "http://127.0.0.1:4000/callback";
+    process.env.CANVA_REDIRECT_URI || "http://127.0.0.1:3000/api/canva/auth";
   const REDIRECT_PROD =
     process.env.CANVA_REDIRECT_URI_PROD ||
-    "https://printssistant-backend.vercel.app/api/canva/callback";
+    "https://printssistant-backend.vercel.app/api/canva/auth";
 
   // Extract the authorization code from the query string
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   if (!code) {
     return new Response("Missing `code` query parameter", { status: 400 });
+  }
+
+  const stateFromQuery = url.searchParams.get("state");
+  const stateFromCookie = request.cookies.get("canva_oauth_state")?.value;
+  if (!stateFromQuery || !stateFromCookie || stateFromQuery !== stateFromCookie) {
+    return new Response("Invalid or missing OAuth state. Start the flow again.", { status: 400 });
   }
 
   // Retrieve the PKCE code_verifier from the cookie set during the auth step
@@ -95,5 +101,6 @@ export async function GET(request: NextRequest) {
     headers: { "Content-Type": "text/html" },
   });
   response.cookies.delete("canva_code_verifier");
+  response.cookies.delete("canva_oauth_state");
   return response;
 }

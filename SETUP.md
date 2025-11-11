@@ -130,6 +130,23 @@ Add the Canva webhook secret as an environment variable:
 2. Check your Supabase `print_jobs` table for the new entry
 3. Verify it includes `design_id`, `export_url`, and `design_title`
 
+## Canva OAuth Flow (for design creation)
+
+Use this flow when you need Canva API access + refresh tokens for the `/api/canva/create` endpoint or other Canva REST calls.
+
+1. **Add env vars**
+   - `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET` from your Canva developer app
+   - Optional overrides: `CANVA_SCOPES`, `CANVA_AUTH_BASE`, `CANVA_AUTH_PATH`, `CANVA_REDIRECT_URI`, `CANVA_REDIRECT_URI_PROD`
+2. **Start the flow**
+   - Visit `/api/canva/auth/start` (local: <http://localhost:3000/api/canva/auth/start>, prod: `https://your-domain.vercel.app/api/canva/auth/start`)
+   - This endpoint sets the PKCE verifier + state cookies and redirects you to Canva’s consent page
+3. **Approve Canva**
+   - Log in, grant scopes, and wait for Canva to redirect back to `/api/canva/auth`
+4. **Copy tokens**
+   - The callback exchanges the auth code for tokens and shows them in a simple HTML page; copy `access_token`/`refresh_token` into environment variables (e.g., `CANVA_ACCESS_TOKEN`, `CANVA_REFRESH_TOKEN`)
+
+If you see “Invalid or missing OAuth state,” restart from step 2 (the cookies expire after ~10 minutes).
+
 ## Email Integration Setup
 
 To receive emails and forward them to the `/api/jobs/email` endpoint:
