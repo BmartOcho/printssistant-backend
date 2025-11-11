@@ -130,6 +130,17 @@ Add the Canva webhook secret as an environment variable:
 2. Check your Supabase `print_jobs` table for the new entry
 3. Verify it includes `design_id`, `export_url`, and `design_title`
 
+### OAuth Redirect URLs (if using Canva REST API)
+
+- Authorized redirect URL (in Canva Developer settings):
+  - `https://YOUR-DOMAIN/api/canva/callback`
+- Start URL to initiate consent:
+  - `https://YOUR-DOMAIN/api/canva/auth/start`
+
+Notes:
+- Keep localhost dev as `http://localhost:3000/api/canva/callback` while testing locally.
+- Ensure your Canva app is in development with your account added as a tester, or submitted/approved for production.
+
 ## Canva OAuth Flow (for design creation)
 
 Use this flow when you need Canva API access + refresh tokens for the `/api/canva/create` endpoint or other Canva REST calls.

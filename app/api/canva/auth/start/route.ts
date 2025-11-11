@@ -18,9 +18,7 @@ export async function GET(request: NextRequest) {
     "design:content:read design:content:write asset:write asset:read webhook:manage"
   const CANVA_AUTH_BASE = process.env.CANVA_AUTH_BASE || "https://www.canva.com"
   const CANVA_AUTH_PATH = process.env.CANVA_AUTH_PATH || "/rest/v1/oauth/authorize"
-  const CANVA_REDIRECT_URI_LOCAL = process.env.CANVA_REDIRECT_URI || "http://127.0.0.1:3000/api/canva/auth"
-  const CANVA_REDIRECT_URI_PROD =
-    process.env.CANVA_REDIRECT_URI_PROD || "https://printssistant-backend.vercel.app/api/canva/auth"
+  const CANVA_REDIRECT_URI_LOCAL = process.env.CANVA_REDIRECT_URI || "http://localhost:3000/api/canva/callback"
 
   if (!CANVA_CLIENT_ID) {
     return NextResponse.json(
@@ -30,10 +28,13 @@ export async function GET(request: NextRequest) {
   }
 
   const url = new URL(request.url)
-  const host =
-    (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").toLowerCase()
+  const hostHeader = (request.headers.get("x-forwarded-host") || request.headers.get("host") || "").toLowerCase()
+  const proto = (request.headers.get("x-forwarded-proto") || "https").toLowerCase()
+  const computedProdRedirect = hostHeader ? `${proto}://${hostHeader}/api/canva/callback` : undefined
   const redirectUri =
-    host.includes("vercel.app") || host.includes("printssistant") ? CANVA_REDIRECT_URI_PROD : CANVA_REDIRECT_URI_LOCAL
+    hostHeader.includes("vercel.app") || hostHeader.includes("printssistant")
+      ? process.env.CANVA_REDIRECT_URI_PROD || computedProdRedirect || CANVA_REDIRECT_URI_LOCAL
+      : CANVA_REDIRECT_URI_LOCAL
 
   // Generate PKCE verifier/challenge and state
   const codeVerifier = base64UrlEncode(randomBytes(64))
